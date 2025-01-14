@@ -79,8 +79,9 @@ extension View {
     }
 }
 
-public
+
 @available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+public
 struct TaskOnLoad: ViewModifier {
     var priority: TaskPriority = .userInitiated
     var action: @Sendable () async -> Void
@@ -106,44 +107,88 @@ struct TaskOnLoad: ViewModifier {
 }
 
 // MARK: NavigationStack的设计是，导航堆栈中的页面会保持自己的状态，而直接在页面上使用.onDisappear来做释放工作，会导致过早触发.onDisappear（在下一个页面Push出来的时候就触发了onDisappear）。使用.onDestroy，会在本页面Pop掉时才触发，完成清理工作。
-@MainActor
-fileprivate
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
-class LifeDetector {
-    private
-    var onDestroy: @Sendable ()->()
-    init(perform: @Sendable @escaping ()->()) {
-        self.onDestroy = perform
-    }
-    deinit {
-        self.onDestroy()
-    }
-}
-
-fileprivate
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
-struct OnDestroyPack: ViewModifier {
-    // 我持有这个对象，这样在我销毁的时候，这个对象也会销毁
-    @State
-    var mod:LifeDetector
-    func body(content: Content) -> some View {
-        content
-    }
-}
-
 @available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onDestroy(perform: @escaping ()->()) -> some View {
         self
-            .modifier(OnDestroyPack(mod:.init(perform: {
-                // class的deinit会在任意线程被调用，让我们总是回到主线程，来处理SwiftUI托付给我们的perform闭包。
-                Task { @MainActor in
-                    await MainActor.run {
-                        perform()
-                    }
+            .modifier(OnDestroyStep0(perform:perform))
+    }
+}
+
+// 视图模型本身不引用任何东西：因为id是一个值拷贝
+// 真正引用着的东西（闭包），是放在全局单例里了
+// 会在调用结束后释放
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+fileprivate
+struct OnDestroyStep0: ViewModifier {
+    var perform:()->()
+    private let id = UUID()
+    func body(content: Content) -> some View {
+        content
+            .onLoad {
+                GlobalOnDestroyActionContainer.shared.addAction(id: id, action: perform)
+            }
+            .modifier(OnDestroyStep1(mod:.init(id:id)))
+    }
+}
+
+class GlobalOnDestroyActionContainer {
+    struct OnDestroyAction:Identifiable {
+        let id:UUID
+        let action:()->()
+    }
+    static let shared = GlobalOnDestroyActionContainer()
+    var actions:[OnDestroyAction] = []
+    func addAction(id:UUID,action:@escaping () -> ()) {
+        self.actions.append(.init(id:id,action: action))
+    }
+    func performAction(id:UUID) {
+        if let index = actions.firstIndex(where: { $0.id == id }) {
+            // 执行并释放
+            actions[index].action()
+            actions.remove(at: index)
+        }
+        
+       
+    }
+}
+
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+fileprivate
+struct OnDestroyStep1: ViewModifier {
+    // 我持有这个对象，这样在我销毁的时候，这个对象也会销毁
+    @State
+    var mod:LifeDetector
+    func body(content: Content) -> some View {
+        content
+            .onLoad {
+                mod.onDestroy = { id in
+                    GlobalOnDestroyActionContainer.shared.performAction(id: id)
                 }
-            })))
+            }
+    }
+}
+
+@MainActor
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+fileprivate
+class LifeDetector {
+    private
+    let id:UUID
+    
+    var onDestroy: @Sendable (UUID)->() = { _ in }
+    init(id:UUID) {
+        self.id = id
+    }
+    deinit {
+        onDestroy(id)
+    }
+}
+
+class LifeDetectorVb {
+    deinit {
+        print("我死了")
     }
 }
 
