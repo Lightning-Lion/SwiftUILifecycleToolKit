@@ -80,6 +80,7 @@ extension View {
 }
 
 public
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 struct TaskOnLoad: ViewModifier {
     var priority: TaskPriority = .userInitiated
     var action: @Sendable () async -> Void
@@ -107,6 +108,7 @@ struct TaskOnLoad: ViewModifier {
 // MARK: NavigationStack的设计是，导航堆栈中的页面会保持自己的状态，而直接在页面上使用.onDisappear来做释放工作，会导致过早触发.onDisappear（在下一个页面Push出来的时候就触发了onDisappear）。使用.onDestroy，会在本页面Pop掉时才触发，完成清理工作。
 @MainActor
 fileprivate
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 class LifeDetector {
     private
     var onDestroy: @Sendable ()->()
@@ -119,6 +121,7 @@ class LifeDetector {
 }
 
 fileprivate
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 struct OnDestroyPack: ViewModifier {
     // 我持有这个对象，这样在我销毁的时候，这个对象也会销毁
     @State
@@ -128,6 +131,7 @@ struct OnDestroyPack: ViewModifier {
     }
 }
 
+@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onDestroy(perform: @escaping ()->()) -> some View {
