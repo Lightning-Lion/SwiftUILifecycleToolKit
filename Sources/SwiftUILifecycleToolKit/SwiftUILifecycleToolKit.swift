@@ -138,7 +138,7 @@ class GlobalOnDestroyActionContainer {
         let id:UUID
         let action:()->()
     }
-    static let shared = GlobalOnDestroyActionContainer()
+    @MainActor static let shared = GlobalOnDestroyActionContainer()
     var actions:[OnDestroyAction] = []
     func addAction(id:UUID,action:@escaping () -> ()) {
         self.actions.append(.init(id:id,action: action))
@@ -164,7 +164,9 @@ struct OnDestroyStep1: ViewModifier {
         content
             .onLoad {
                 mod.onDestroy = { id in
-                    GlobalOnDestroyActionContainer.shared.performAction(id: id)
+                    Task { @MainActor in
+                        GlobalOnDestroyActionContainer.shared.performAction(id: id)
+                    }
                 }
             }
     }
