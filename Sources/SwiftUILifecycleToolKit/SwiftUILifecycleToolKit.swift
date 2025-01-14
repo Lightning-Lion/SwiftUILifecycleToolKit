@@ -68,7 +68,7 @@ struct OnChange<V>: ViewModifier where V : Equatable {
 @available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
-    @inlinable public func task(priority: TaskPriority = .userInitiated, onLoad: Bool, _ action: @escaping @Sendable () async -> Void) -> some View {
+    public func task(priority: TaskPriority = .userInitiated, onLoad: Bool, _ action: @escaping @Sendable () async -> Void) -> some View {
         if onLoad {
             self
                 .modifier(TaskOnLoad(priority: priority, action: action))
