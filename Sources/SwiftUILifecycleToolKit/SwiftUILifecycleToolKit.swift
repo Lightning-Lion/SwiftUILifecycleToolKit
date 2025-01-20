@@ -45,7 +45,7 @@ extension View {
                 .modifier(OnChange(value: value, action: action))
         } else {
             self
-                .onChange(of: value, initial: false, action)
+                .onChange(of: value, initial: true, action)
         }
     }
 }
