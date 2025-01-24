@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: 提供onLoad扩展，避免难以调试的Bug（意外触发了多次加载）
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(iOS 15.0, watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onLoad(perform:@escaping () -> ()) -> some View {
@@ -17,7 +17,7 @@ extension View {
     }
 }
 
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(iOS 15.0, watchOS 10.0, macOS 14.0, *)
 fileprivate
 struct OnLoad: ViewModifier {
     var action:() -> ()
