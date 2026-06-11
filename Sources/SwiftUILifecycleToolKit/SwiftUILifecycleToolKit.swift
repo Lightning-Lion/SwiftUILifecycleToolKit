@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: 提供onLoad扩展，避免难以调试的Bug（意外触发了多次加载）
-@available(iOS 15.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onLoad(perform:@escaping () -> ()) -> some View {
@@ -17,7 +17,7 @@ extension View {
     }
 }
 
-@available(iOS 15.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 fileprivate
 struct OnLoad: ViewModifier {
     var action:() -> ()
@@ -36,7 +36,7 @@ struct OnLoad: ViewModifier {
 }
 
 // MARK: 提供onChange，默认的.onChange(of: value, initial: true)的行为是在值变化的时候触发、以及在onAppear的时候也触发。我们这个onChange(of: value, onLoad: true)只在页面打开的时候触发，和在后续值变化的时候触发。
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onChange<V>(of value: V, onLoad: Bool = false, _ action: @escaping (_ oldValue: V, _ newValue: V) -> Void) -> some View where V : Equatable {
@@ -50,7 +50,7 @@ extension View {
     }
 }
 
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 fileprivate
 struct OnChange<V>: ViewModifier where V : Equatable {
     var value: V
@@ -65,7 +65,7 @@ struct OnChange<V>: ViewModifier where V : Equatable {
 }
 
 // MARK: 提供.task(onLoad:true)扩展，避免难以调试的Bug（意外触发了多次加载）
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func task(priority: TaskPriority = .userInitiated, onLoad: Bool, _ action: @escaping @Sendable () async -> Void) -> some View {
@@ -80,7 +80,7 @@ extension View {
 }
 
 
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 public
 struct TaskOnLoad: ViewModifier {
     var priority: TaskPriority = .userInitiated
@@ -107,7 +107,7 @@ struct TaskOnLoad: ViewModifier {
 }
 
 // MARK: NavigationStack的设计是，导航堆栈中的页面会保持自己的状态，而直接在页面上使用.onDisappear来做释放工作，会导致过早触发.onDisappear（在下一个页面Push出来的时候就触发了onDisappear）。使用.onDestroy，会在本页面Pop掉时才触发，完成清理工作。
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 extension View {
     @ViewBuilder
     public func onDestroy(perform: @escaping ()->()) -> some View {
@@ -119,7 +119,7 @@ extension View {
 // 视图模型本身不引用任何东西：因为id是一个值拷贝
 // 真正引用着的东西（闭包），是放在全局单例里了
 // 会在调用结束后释放
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 fileprivate
 struct OnDestroyStep0: ViewModifier {
     var perform:()->()
@@ -154,7 +154,7 @@ class GlobalOnDestroyActionContainer {
     }
 }
 
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 fileprivate
 struct OnDestroyStep1: ViewModifier {
     // 我持有这个对象，这样在我销毁的时候，这个对象也会销毁
@@ -173,7 +173,7 @@ struct OnDestroyStep1: ViewModifier {
 }
 
 @MainActor
-@available(iOS 17.0, watchOS 10.0, macOS 14.0, *)
+@available(watchOS 10.0, macOS 14.0, *)
 fileprivate
 class LifeDetector {
     private
